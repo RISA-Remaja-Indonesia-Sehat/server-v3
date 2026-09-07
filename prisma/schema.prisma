@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccessStatus {
+  ACTIVE
+  REVOKED
+}
+
+model Guardian {
+  id        String   @id @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  children GuardianChild[]
+  consents ParentalConsent[]
+}
+
+model ChildProfile {
+  id       String  @id @default(uuid()) @db.Uuid
+  username String
+  avatarId String  @default("avatar-01")
+  pinHash  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guardians GuardianChild[]
+  consents  ParentalConsent[]
+  chapters  ChapterProgress[]
+  postTest  PostTestProgress?
+}
+
+model GuardianChild {
+  guardianId String @db.Uuid
+  childId    String @db.Uuid
+
+  status AccessStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+
+  guardian Guardian     @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+  child    ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@id([guardianId, childId])
+}
+
+model ParentalConsent {
+  id String @id @default(uuid()) @db.Uuid
+
+  guardianId String @db.Uuid
+  childId    String @db.Uuid
+
+  policyVersion String
+
+  consentedAt DateTime  @default(now())
+  revokedAt   DateTime?
+
+  guardian Guardian     @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+  child    ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([guardianId])
+  @@index([childId])
+}
+
+model ChapterProgress {
+  id Int @id @default(autoincrement())
+
+  childId       String @db.Uuid
+  chapterNumber Int
+
+  score       Int?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  child ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, chapterNumber])
+}
+
+model PostTestProgress {
+  id String @id @default(uuid()) @db.Uuid
+
+  childId String @unique @db.Uuid
+
+  score       Int?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  child ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+}
