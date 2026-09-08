@@ -10,7 +10,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3000/guardian/login", "http://localhost:3000/child/login", "https://risa-v2.vercel.app/", "https://risa-v2.vercel.app/guardian/login", "https://risa-v2.vercel.app/child/login"],
+    origin: ["http://localhost:3000", "https://risa-v2.vercel.app",],
     credentials: true,
   })
 );

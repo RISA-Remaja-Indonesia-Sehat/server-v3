@@ -167,26 +167,47 @@ export async function authenticateChild(username: string, pin: string) {
   };
 }
 
-export async function getChildHomeData(childId: string) {
-  const child = await prisma.childProfile.findUnique({
-    where: {
-      id: childId,
-    },
+export async function getChildHomeData(
+  childId: string,
+) {
+  const child =
+    await prisma.childProfile.findUnique({
+      where: {
+        id: childId,
+      },
 
-    include: {
-      chapters: true,
-      postTest: true,
-    },
-  });
+      select: {
+        id: true,
+        username: true,
+        avatarId: true,
+
+        chapters: {
+          where: {
+            completedAt: {
+              not: null,
+            },
+          },
+          select: {
+            chapterNumber: true,
+          },
+        },
+
+        postTest: {
+          select: {
+            completedAt: true,
+          },
+        },
+      },
+    });
 
   if (!child) {
     return null;
   }
 
-  const completedChapters = child.chapters
-    .filter((chapter) => chapter.completedAt !== null)
-    .map((chapter) => chapter.chapterNumber)
-    .sort((a, b) => a - b);
+  const completedChapters =
+    child.chapters
+      .map((chapter) => chapter.chapterNumber)
+      .sort((a, b) => a - b);
 
   return {
     child: {
@@ -197,6 +218,8 @@ export async function getChildHomeData(childId: string) {
 
     completedChapters,
 
-    postTestCompleted: Boolean(child.postTest?.completedAt),
+    postTestCompleted:
+      child.postTest?.completedAt !== null &&
+      child.postTest !== null,
   };
 }
