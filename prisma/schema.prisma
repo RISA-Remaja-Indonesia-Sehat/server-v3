@@ -29,7 +29,7 @@ model Guardian {
 
 model ChildProfile {
   id       String  @id @default(uuid()) @db.Uuid
-  username String
+  username String  @unique
   avatarId String  @default("avatar-01")
   pinHash  String?
 
