@@ -22,13 +22,14 @@ model Guardian {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  children GuardianChild[]
-  consents ParentalConsent[]
+  children       GuardianChild[]
+  consents       ParentalConsent[]
+  ConsentRequest ConsentRequest[]
 }
 
 model ChildProfile {
   id       String  @id @default(uuid()) @db.Uuid
-  username String
+  username String  @unique
   avatarId String  @default("avatar-01")
   pinHash  String?
 
@@ -102,4 +103,30 @@ model PostTestProgress {
   updatedAt DateTime @updatedAt
 
   child ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+}
+
+enum ConsentRequestStatus {
+  PENDING
+  APPROVED
+  CONSUMED
+  REJECTED
+  EXPIRED
+}
+
+model ConsentRequest {
+  id            String               @id @default(uuid()) @db.Uuid
+  guardianId    String               @db.Uuid
+  policyVersion String
+  status        ConsentRequestStatus @default(PENDING)
+
+  approvedAt DateTime?
+  consumedAt DateTime?
+  expiresAt  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guardian Guardian @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+
+  @@index([guardianId])
 }
