@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { createApprovedConsentRequest } from "../services/consent.service";
+import { createApprovedConsentRequest } from "../services/consent.service.js";
 
 export async function approveConsent(req: Request, res: Response) {
   try {

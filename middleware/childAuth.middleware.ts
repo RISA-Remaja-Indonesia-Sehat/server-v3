@@ -7,7 +7,7 @@ import type {
 import {
   CHILD_SESSION_COOKIE,
   verifyChildSessionToken,
-} from "../lib/auth/child-session";
+} from "../lib/auth/child-session.js";
 
 export async function childAuth(
   req: Request,

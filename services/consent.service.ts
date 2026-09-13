@@ -1,6 +1,6 @@
-import { prisma } from "../config/prisma";
+import { prisma } from "../config/prisma.js";
 
-import { CONSENT_REQUEST_TTL_MINUTES, CURRENT_PARENT_CONSENT_VERSION } from "../config/consent";
+import { CONSENT_REQUEST_TTL_MINUTES, CURRENT_PARENT_CONSENT_VERSION } from "../config/consent.js";
 
 export async function createApprovedConsentRequest(
   guardianId: string

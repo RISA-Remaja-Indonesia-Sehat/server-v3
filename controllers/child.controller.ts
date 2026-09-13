@@ -4,14 +4,13 @@ import {
   authenticateChild,
   getChildHomeData,
   setupChildProfile,
-} from "../services/child.service";
-
+} from "../services/child.service.js";
 import {
   CHILD_SESSION_COOKIE,
   childClearCookieOptions,
   childCookieOptions,
   createChildSessionToken,
-} from "../lib/auth/child-session";
+} from "../lib/auth/child-session.js";
 
 export async function setupChild(req: Request, res: Response) {
   try {

@@ -1,16 +1,16 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 
-import { guardianAuth } from "../middleware/guardianAuth.middleware";
+import { guardianAuth } from "../middleware/guardianAuth.middleware.js";
 
 import {
   getMyChild,
   loginChild,
   logoutChild,
   setupChild,
-} from "../controllers/child.controller";
+} from "../controllers/child.controller.js";
 
-import { childAuth } from "../middleware/childAuth.middleware";
+import { childAuth } from "../middleware/childAuth.middleware.js";
 
 const childLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

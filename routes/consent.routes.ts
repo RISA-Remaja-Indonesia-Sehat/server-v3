@@ -2,11 +2,11 @@ import { Router } from "express";
 
 import {
   guardianAuth,
-} from "../middleware/guardianAuth.middleware";
+} from "../middleware/guardianAuth.middleware.js";
 
 import {
   approveConsent,
-} from "../controllers/consent.controller";
+} from "../controllers/consent.controller.js";
 
 const router = Router();
 
