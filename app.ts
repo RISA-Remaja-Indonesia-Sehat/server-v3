@@ -6,6 +6,7 @@ import healthRouter from "./routes/health.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import consentRoutes from "./routes/consent.routes.js";
 import childRoutes from "./routes/child.route.js";
+import moduleRoutes from "./routes/module.route.js";
 
 const app = express();
 
@@ -23,5 +24,6 @@ app.use("/api/health", healthRouter);
 app.use("/api/me", profileRoutes);
 app.use("/api/consent", consentRoutes);
 app.use("/api/child", childRoutes);
+app.use("/api/modules", moduleRoutes);
 
 export default app;

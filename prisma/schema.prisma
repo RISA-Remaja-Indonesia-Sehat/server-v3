@@ -130,3 +130,37 @@ model ConsentRequest {
 
   @@index([guardianId])
 }
+
+model LearningModule {
+  id String @id @default(uuid()) @db.Uuid
+
+  chapterNumber Int @unique
+
+  title         String
+  objective     String
+  durationLabel String
+
+  contentVersion Int      @default(1)
+  lastReviewedAt DateTime?
+
+  cards ModuleCard[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ModuleCard {
+  id String @id @default(uuid()) @db.Uuid
+
+  moduleId String @db.Uuid
+
+  order Int
+  title String
+
+  content Json
+
+  module LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, order])
+  @@index([moduleId])
+}
