@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 
-import { prisma } from "../config/prisma";
+import { Prisma } from "../generated/prisma/client.js";
+import { prisma } from "../config/prisma.js";
 
 type SetupChildParams = {
   guardianId: string;
@@ -47,7 +48,7 @@ export async function setupChildProfile({
 
   const pinHash = await bcrypt.hash(pin, 12);
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     /*
      * Consent harus:
      * - milik Guardian ini
@@ -206,8 +207,8 @@ export async function getChildHomeData(
 
   const completedChapters =
     child.chapters
-      .map((chapter) => chapter.chapterNumber)
-      .sort((a, b) => a - b);
+      .map((chapter: { chapterNumber: number }) => chapter.chapterNumber)
+      .sort((a: number, b: number) => a - b);
 
   return {
     child: {

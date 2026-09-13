@@ -5,7 +5,7 @@ import type {
 
 import {
   getOrCreateGuardian,
-} from "../services/profile.service";
+} from "../services/profile.service.js";
 
 export async function getMyProfile(
   req: Request,

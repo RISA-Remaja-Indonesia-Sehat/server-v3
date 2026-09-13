@@ -1,10 +1,11 @@
 import express from "express";
 import cors from "cors";
-import healthRouter from "./routes/health.routes";
-import profileRoutes from "./routes/profile.routes";
-import consentRoutes from "./routes/consent.routes";
-import childRoutes from "./routes/child.route";
 import cookieParser from "cookie-parser";
+
+import healthRouter from "./routes/health.routes.js";
+import profileRoutes from "./routes/profile.routes.js";
+import consentRoutes from "./routes/consent.routes.js";
+import childRoutes from "./routes/child.route.js";
 
 const app = express();
 

@@ -4,7 +4,7 @@ import type {
   NextFunction,
 } from "express";
 
-import { supabaseAdmin } from "../config/supabase";
+import { supabaseAdmin } from "../config/supabase.js";
 
 export async function guardianAuth(
   req: Request,
