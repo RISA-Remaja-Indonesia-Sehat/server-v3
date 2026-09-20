@@ -224,3 +224,105 @@ export async function getChildHomeData(
       child.postTest !== null,
   };
 }
+
+type CompleteChapterParams = {
+  childId: string;
+  chapterNumber: number;
+  score?: number;
+};
+
+export async function completeChapterProgress({
+  childId,
+  chapterNumber,
+  score,
+}: CompleteChapterParams) {
+  if (
+    !Number.isInteger(chapterNumber) ||
+    chapterNumber < 1 ||
+    chapterNumber > 7
+  ) {
+    throw new Error(
+      "INVALID_CHAPTER_NUMBER"
+    );
+  }
+
+  return prisma.$transaction(
+    async (tx: Prisma.TransactionClient) => {
+      /*
+       * Chapter 2-7 hanya boleh diselesaikan
+       * kalau chapter sebelumnya sudah selesai.
+       */
+      if (chapterNumber > 1) {
+        const previousChapter =
+          await tx.chapterProgress.findUnique({
+            where: {
+              childId_chapterNumber: {
+                childId,
+                chapterNumber:
+                  chapterNumber - 1,
+              },
+            },
+
+            select: {
+              completedAt: true,
+            },
+          });
+
+        if (
+          !previousChapter?.completedAt
+        ) {
+          throw new Error(
+            "PREVIOUS_CHAPTER_NOT_COMPLETED"
+          );
+        }
+      }
+
+      const existing =
+        await tx.chapterProgress.findUnique({
+          where: {
+            childId_chapterNumber: {
+              childId,
+              chapterNumber,
+            },
+          },
+        });
+
+      const completedAt =
+        existing?.completedAt ??
+        new Date();
+
+      return tx.chapterProgress.upsert({
+        where: {
+          childId_chapterNumber: {
+            childId,
+            chapterNumber,
+          },
+        },
+
+        create: {
+          childId,
+          chapterNumber,
+          completedAt,
+
+          ...(score !== undefined
+            ? { score }
+            : {}),
+        },
+
+        update: {
+          completedAt,
+
+          ...(score !== undefined
+            ? { score }
+            : {}),
+        },
+
+        select: {
+          chapterNumber: true,
+          score: true,
+          completedAt: true,
+        },
+      });
+    }
+  );
+}

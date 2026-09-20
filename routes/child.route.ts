@@ -4,6 +4,7 @@ import rateLimit from "express-rate-limit";
 import { guardianAuth } from "../middleware/guardianAuth.middleware.js";
 
 import {
+  completeChapter,
   getMyChild,
   loginChild,
   logoutChild,
@@ -35,6 +36,8 @@ router.post("/setup", guardianAuth, setupChild);
 router.post("/login", childLoginLimiter, loginChild);
 
 router.get("/me", childAuth, getMyChild);
+
+router.post("/chapters/:chapterNumber/complete", childAuth, completeChapter);
 
 router.post("/logout", logoutChild);
 
