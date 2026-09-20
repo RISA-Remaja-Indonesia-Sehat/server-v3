@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.ts",
-   "scripts": {
+  "scripts": {
     "dev": "tsx watch server.ts",
     "build": "prisma generate && tsc",
     "start": "node dist/server.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed:post-test": "tsx scripts/seed-post-test.ts"
   },
   "keywords": [],
   "author": "",

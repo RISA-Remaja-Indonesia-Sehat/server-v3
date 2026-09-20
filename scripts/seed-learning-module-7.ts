@@ -5,7 +5,7 @@ async function main() {
     data: {
       chapterNumber: 7,
 
-      title: "Kenali Infeksi Menular Seksial (IMS)",
+      title: "Kenali Infeksi Menular Seksual (IMS)",
 
       objective:
         "Memahami apa itu IMS, beberapa jenis dan tanda yang perlu diperhatikan, serta kapan mencari bantuan tanpa menghakimi.",

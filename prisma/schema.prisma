@@ -96,13 +96,44 @@ model PostTestProgress {
 
   childId String @unique @db.Uuid
 
-  score       Int?
-  completedAt DateTime?
+  score          Int?
+  correctAnswers Int?
+  totalQuestions Int?
+  contentVersion Int?
+  completedAt    DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   child ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+}
+
+enum PostTestQuestionType {
+  SINGLE_CHOICE
+  TRUE_FALSE
+}
+
+model PostTestQuestion {
+  id String @id @default(uuid()) @db.Uuid
+
+  order         Int
+  chapterNumber Int
+  type          PostTestQuestionType @default(SINGLE_CHOICE)
+
+  prompt          String
+  options         Json
+  correctOptionId String
+  explanation     String
+
+  contentVersion Int     @default(1)
+  isActive       Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([contentVersion, order])
+  @@index([contentVersion, isActive])
+  @@index([chapterNumber])
 }
 
 enum ConsentRequestStatus {
@@ -140,7 +171,7 @@ model LearningModule {
   objective     String
   durationLabel String
 
-  contentVersion Int      @default(1)
+  contentVersion Int       @default(1)
   lastReviewedAt DateTime?
 
   cards ModuleCard[]
