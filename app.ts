@@ -8,6 +8,7 @@ import consentRoutes from "./routes/consent.routes.js";
 import childRoutes from "./routes/child.route.js";
 import moduleRoutes from "./routes/module.route.js";
 import guardianDashboardRoutes from "./routes/guardian-dashboard.route.js";
+import postTestRoutes from "./routes/post-test.route.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/me", profileRoutes);
 app.use("/api/consent", consentRoutes);
 app.use("/api/child", childRoutes);
 app.use("/api/modules", moduleRoutes);
+app.use("/api/post-test", postTestRoutes);
 app.use(
   "/api/guardian/dashboard",
   guardianDashboardRoutes,
