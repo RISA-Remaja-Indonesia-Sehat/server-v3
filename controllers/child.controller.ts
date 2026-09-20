@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import {
   authenticateChild,
+  completeChapterProgress,
   getChildHomeData,
   setupChildProfile,
 } from "../services/child.service.js";
@@ -200,4 +201,80 @@ export async function logoutChild(req: Request, res: Response) {
   return res.status(200).json({
     success: true,
   });
+}
+
+export async function completeChapter(
+  req: Request,
+  res: Response
+) {
+  try {
+    const childId =
+      res.locals.childId as string;
+
+    const chapterNumber =
+      Number(
+        req.params.chapterNumber
+      );
+
+    const rawScore =
+      req.body?.score;
+
+    const score =
+      typeof rawScore === "number" &&
+      Number.isFinite(rawScore)
+        ? Math.round(rawScore)
+        : undefined;
+
+    const progress =
+      await completeChapterProgress({
+        childId,
+        chapterNumber,
+        score,
+      });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        progress,
+      },
+    });
+  } catch (error) {
+    const code =
+      error instanceof Error
+        ? error.message
+        : "";
+
+    if (
+      code ===
+      "INVALID_CHAPTER_NUMBER"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Nomor chapter tidak valid.",
+      });
+    }
+
+    if (
+      code ===
+      "PREVIOUS_CHAPTER_NOT_COMPLETED"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Selesaikan chapter sebelumnya terlebih dahulu.",
+      });
+    }
+
+    console.error(
+      "Complete chapter error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Gagal menyimpan progres chapter.",
+    });
+  }
 }
