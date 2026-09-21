@@ -15,6 +15,21 @@ function childIdFrom(res: Response) {
   return res.locals.childId as string;
 }
 
+function idParam(req: Request, name: string) {
+  const value = req.params[name];
+
+  if (
+    typeof value !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value,
+    )
+  ) {
+    throw new Error("INVALID_RESOURCE_ID");
+  }
+
+  return value;
+}
+
 function sendCommunityError(res: Response, error: unknown) {
   const code = error instanceof Error ? error.message : "";
 
@@ -34,6 +49,10 @@ function sendCommunityError(res: Response, error: unknown) {
     INVALID_CATEGORY: {
       status: 400,
       message: "Kategori Temanku tidak valid.",
+    },
+    INVALID_RESOURCE_ID: {
+      status: 400,
+      message: "ID data Temanku tidak valid.",
     },
     POST_NOT_FOUND: {
       status: 404,
@@ -98,7 +117,7 @@ export async function createPost(req: Request, res: Response) {
 
 export async function removePost(req: Request, res: Response) {
   try {
-    await deleteCommunityPost(childIdFrom(res), req.params.postId);
+    await deleteCommunityPost(childIdFrom(res), idParam(req, "postId"));
     return res.status(200).json({ success: true });
   } catch (error) {
     return sendCommunityError(res, error);
@@ -109,7 +128,7 @@ export async function listComments(req: Request, res: Response) {
   try {
     const comments = await getCommunityComments(
       childIdFrom(res),
-      req.params.postId,
+      idParam(req, "postId"),
     );
 
     return res.status(200).json({ success: true, data: { comments } });
@@ -122,7 +141,7 @@ export async function createComment(req: Request, res: Response) {
   try {
     const comment = await createCommunityComment({
       childId: childIdFrom(res),
-      postId: req.params.postId,
+      postId: idParam(req, "postId"),
       content: req.body?.content,
       isAnonymous: req.body?.isAnonymous,
     });
@@ -135,7 +154,10 @@ export async function createComment(req: Request, res: Response) {
 
 export async function removeComment(req: Request, res: Response) {
   try {
-    await deleteCommunityComment(childIdFrom(res), req.params.commentId);
+    await deleteCommunityComment(
+      childIdFrom(res),
+      idParam(req, "commentId"),
+    );
     return res.status(200).json({ success: true });
   } catch (error) {
     return sendCommunityError(res, error);
@@ -144,7 +166,7 @@ export async function removeComment(req: Request, res: Response) {
 
 export async function likePost(req: Request, res: Response) {
   try {
-    await likeCommunityPost(childIdFrom(res), req.params.postId);
+    await likeCommunityPost(childIdFrom(res), idParam(req, "postId"));
     return res.status(200).json({ success: true });
   } catch (error) {
     return sendCommunityError(res, error);
@@ -153,7 +175,7 @@ export async function likePost(req: Request, res: Response) {
 
 export async function unlikePost(req: Request, res: Response) {
   try {
-    await unlikeCommunityPost(childIdFrom(res), req.params.postId);
+    await unlikeCommunityPost(childIdFrom(res), idParam(req, "postId"));
     return res.status(200).json({ success: true });
   } catch (error) {
     return sendCommunityError(res, error);
