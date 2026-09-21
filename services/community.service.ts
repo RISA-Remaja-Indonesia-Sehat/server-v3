@@ -4,6 +4,7 @@ import {
 } from "../generated/prisma/client.js";
 
 import { prisma } from "../config/prisma.js";
+import { moderateCommunityPost, CommunityModerationError } from "./community-moderation.service.js";
 
 const POST_PAGE_SIZE = 12;
 const MAX_TITLE_LENGTH = 80;
@@ -220,37 +221,72 @@ export async function getCommunityComments(childId: string, postId: string) {
   }));
 }
 
-export async function createCommunityComment(input: CreateCommentInput) {
-  const postExists = await prisma.communityPost.findUnique({
-    where: { id: input.postId },
-    select: { id: true },
-  });
+export async function createCommunityComment(
+  input: CreateCommentInput,
+) {
+  const postExists =
+    await prisma.communityPost.findUnique({
+      where: {
+        id: input.postId,
+      },
+      select: {
+        id: true,
+      },
+    });
 
   if (!postExists) {
-    throw new Error("POST_NOT_FOUND");
+    throw new Error(
+      "POST_NOT_FOUND",
+    );
   }
 
-  const comment = await prisma.communityComment.create({
-    data: {
-      childId: input.childId,
-      postId: input.postId,
-      content: cleanText(
-        input.content,
-        MAX_COMMENT_LENGTH,
-        "INVALID_COMMENT",
-      ),
-      isAnonymous: input.isAnonymous === true,
-    },
-    include: {
-      child: { select: authorSelect },
-    },
-  });
+  const cleanedContent =
+    cleanText(
+      input.content,
+      MAX_COMMENT_LENGTH,
+      "INVALID_COMMENT",
+    );
+
+  const moderation =
+    await moderateCommunityPost({
+      title: "",
+      content: cleanedContent,
+      category: "COMMENT",
+    });
+
+  if (
+    moderation.decision !== "ALLOW"
+  ) {
+    throw new CommunityModerationError(
+      moderation,
+    );
+  }
+
+  const comment =
+    await prisma.communityComment.create({
+      data: {
+        childId: input.childId,
+        postId: input.postId,
+        content: cleanedContent,
+        isAnonymous:
+          input.isAnonymous === true,
+      },
+      include: {
+        child: {
+          select: authorSelect,
+        },
+      },
+    });
 
   return {
     id: comment.id,
     content: comment.content,
-    isAnonymous: comment.isAnonymous,
-    author: publicAuthor(comment.isAnonymous, comment.child),
+    isAnonymous:
+      comment.isAnonymous,
+    author: publicAuthor(
+      comment.isAnonymous,
+      comment.child,
+    ),
     isOwner: true,
     createdAt: comment.createdAt,
   };

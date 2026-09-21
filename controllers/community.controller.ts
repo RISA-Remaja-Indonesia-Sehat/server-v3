@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { moderateCommunityPost, CommunityModerationError } from "../services/community-moderation.service.js";
 
 import {
   createCommunityComment,
@@ -31,6 +32,17 @@ function idParam(req: Request, name: string) {
 }
 
 function sendCommunityError(res: Response, error: unknown) {
+  if (error instanceof CommunityModerationError) {
+    return res.status(422).json({
+      success: false,
+      code: "CONTENT_NEEDS_REVISION",
+      message:
+        error.moderation.decision === "REVISE"
+          ? "Komentarmu perlu dirapikan sedikit."
+          : "Komentar ini belum dapat dikirim.",
+      moderation: error.moderation,
+    });
+  }
   const code = error instanceof Error ? error.message : "";
 
   const errors: Record<string, { status: number; message: string }> = {
@@ -101,6 +113,24 @@ export async function listPosts(req: Request, res: Response) {
 
 export async function createPost(req: Request, res: Response) {
   try {
+    const moderation = await moderateCommunityPost({
+      title: req.body?.title,
+      content: req.body?.content,
+      category: req.body?.category,
+    });
+
+    if (moderation.decision !== "ALLOW") {
+      return res.status(422).json({
+        success: false,
+        code: "CONTENT_NEEDS_REVISION",
+        message:
+          moderation.decision === "REVISE"
+            ? "Tulisanmu perlu dirapikan sedikit."
+            : "Tulisan ini belum dapat diposting.",
+        moderation,
+      });
+    }
+
     const post = await createCommunityPost({
       childId: childIdFrom(res),
       title: req.body?.title,
@@ -109,8 +139,16 @@ export async function createPost(req: Request, res: Response) {
       isAnonymous: req.body?.isAnonymous,
     });
 
-    return res.status(201).json({ success: true, data: { post } });
+    return res.status(201).json({
+      success: true,
+      data: { post },
+    });
   } catch (error) {
+    console.error(
+      "Create community post error:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
+
     return sendCommunityError(res, error);
   }
 }
@@ -154,10 +192,7 @@ export async function createComment(req: Request, res: Response) {
 
 export async function removeComment(req: Request, res: Response) {
   try {
-    await deleteCommunityComment(
-      childIdFrom(res),
-      idParam(req, "commentId"),
-    );
+    await deleteCommunityComment(childIdFrom(res), idParam(req, "commentId"));
     return res.status(200).json({ success: true });
   } catch (error) {
     return sendCommunityError(res, error);
