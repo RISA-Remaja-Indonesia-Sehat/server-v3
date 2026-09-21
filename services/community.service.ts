@@ -1,10 +1,10 @@
-import {
-  CommunityCategory,
-  Prisma,
-} from "../generated/prisma/client.js";
+import { CommunityCategory, Prisma } from "../generated/prisma/client.js";
 
 import { prisma } from "../config/prisma.js";
-import { moderateCommunityPost, CommunityModerationError } from "./community-moderation.service.js";
+import {
+  moderateCommunityPost,
+  CommunityModerationError,
+} from "./community-moderation.service.js";
 
 const POST_PAGE_SIZE = 12;
 const MAX_TITLE_LENGTH = 80;
@@ -66,9 +66,7 @@ function cleanText(value: unknown, maxLength: number, errorCode: string) {
 function parseCategory(value: unknown) {
   if (
     typeof value !== "string" ||
-    !Object.values(CommunityCategory).includes(
-      value as CommunityCategory,
-    )
+    !Object.values(CommunityCategory).includes(value as CommunityCategory)
   ) {
     throw new Error("INVALID_CATEGORY");
   }
@@ -104,29 +102,44 @@ export async function getCommunityPosts({
       : parseCategory(category);
   const currentPage = parsePage(page);
 
-  const where = selectedCategory
-    ? { category: selectedCategory }
-    : undefined;
+  const where = selectedCategory ? { category: selectedCategory } : undefined;
 
-  const [posts, total] = await prisma.$transaction([
-    prisma.communityPost.findMany({
-      where,
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      skip: (currentPage - 1) * POST_PAGE_SIZE,
-      take: POST_PAGE_SIZE,
-      include: {
-        child: { select: authorSelect },
-        likes: {
-          where: { childId },
-          select: { childId: true },
+  const posts = await prisma.communityPost.findMany({
+    where,
+
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+
+    skip: (currentPage - 1) * POST_PAGE_SIZE,
+
+    take: POST_PAGE_SIZE,
+
+    include: {
+      child: {
+        select: authorSelect,
+      },
+
+      likes: {
+        where: {
+          childId,
         },
-        _count: {
-          select: { likes: true, comments: true },
+
+        select: {
+          childId: true,
         },
       },
-    }),
-    prisma.communityPost.count({ where }),
-  ]);
+
+      _count: {
+        select: {
+          likes: true,
+          comments: true,
+        },
+      },
+    },
+  });
+
+  const total = await prisma.communityPost.count({
+    where,
+  });
 
   return {
     posts: posts.map((post) => ({
@@ -221,72 +234,55 @@ export async function getCommunityComments(childId: string, postId: string) {
   }));
 }
 
-export async function createCommunityComment(
-  input: CreateCommentInput,
-) {
-  const postExists =
-    await prisma.communityPost.findUnique({
-      where: {
-        id: input.postId,
-      },
-      select: {
-        id: true,
-      },
-    });
+export async function createCommunityComment(input: CreateCommentInput) {
+  const postExists = await prisma.communityPost.findUnique({
+    where: {
+      id: input.postId,
+    },
+    select: {
+      id: true,
+    },
+  });
 
   if (!postExists) {
-    throw new Error(
-      "POST_NOT_FOUND",
-    );
+    throw new Error("POST_NOT_FOUND");
   }
 
-  const cleanedContent =
-    cleanText(
-      input.content,
-      MAX_COMMENT_LENGTH,
-      "INVALID_COMMENT",
-    );
+  const cleanedContent = cleanText(
+    input.content,
+    MAX_COMMENT_LENGTH,
+    "INVALID_COMMENT",
+  );
 
-  const moderation =
-    await moderateCommunityPost({
-      title: "",
+  const moderation = await moderateCommunityPost({
+    title: "",
+    content: cleanedContent,
+    category: "COMMENT",
+  });
+
+  if (moderation.decision !== "ALLOW") {
+    throw new CommunityModerationError(moderation);
+  }
+
+  const comment = await prisma.communityComment.create({
+    data: {
+      childId: input.childId,
+      postId: input.postId,
       content: cleanedContent,
-      category: "COMMENT",
-    });
-
-  if (
-    moderation.decision !== "ALLOW"
-  ) {
-    throw new CommunityModerationError(
-      moderation,
-    );
-  }
-
-  const comment =
-    await prisma.communityComment.create({
-      data: {
-        childId: input.childId,
-        postId: input.postId,
-        content: cleanedContent,
-        isAnonymous:
-          input.isAnonymous === true,
+      isAnonymous: input.isAnonymous === true,
+    },
+    include: {
+      child: {
+        select: authorSelect,
       },
-      include: {
-        child: {
-          select: authorSelect,
-        },
-      },
-    });
+    },
+  });
 
   return {
     id: comment.id,
     content: comment.content,
-    isAnonymous:
-      comment.isAnonymous,
-    author: publicAuthor(
-      comment.isAnonymous,
-      comment.child,
-    ),
+    isAnonymous: comment.isAnonymous,
+    author: publicAuthor(comment.isAnonymous, comment.child),
     isOwner: true,
     createdAt: comment.createdAt,
   };
