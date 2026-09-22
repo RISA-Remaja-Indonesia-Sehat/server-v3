@@ -5,8 +5,8 @@ import { prisma } from "../config/prisma.js";
 
 import { assertConsentRequestUsable } from "./consent.service.js";
 
-const CHAPTER_1_TOTAL_SCORE = 6;
-const CHAPTER_1_MINIMUM_SCORE = 4;
+export const CHAPTER_1_TOTAL_SCORE = 6;
+export const CHAPTER_1_MINIMUM_SCORE = 4;
 
 type SetupChildParams = {
   guardianId: string;
