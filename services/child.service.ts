@@ -77,10 +77,6 @@ export async function setupChildProfile({
 
     assertConsentRequestUsable(consentRequest, guardianId);
 
-    if (!consentRequest) {
-      throw new Error("CONSENT_NOT_VALID");
-    }
-
     const child = await tx.childProfile.create({
       data: {
         username: cleanUsername,
