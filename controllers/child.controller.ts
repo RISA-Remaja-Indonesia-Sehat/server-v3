@@ -5,13 +5,44 @@ import {
   completeChapterProgress,
   getChildHomeData,
   setupChildProfile,
+  CHAPTER_1_MINIMUM_SCORE,
+  CHAPTER_1_TOTAL_SCORE,
 } from "../services/child.service.js";
+
 import {
   CHILD_SESSION_COOKIE,
   childClearCookieOptions,
   childCookieOptions,
   createChildSessionToken,
 } from "../lib/auth/child-session.js";
+
+const COMPLETE_CHAPTER_ERRORS: Record<
+  string,
+  {
+    status: number;
+    message: string;
+  }
+> = {
+  INVALID_CHAPTER_NUMBER: {
+    status: 400,
+    message: "Nomor chapter tidak valid.",
+  },
+
+  INVALID_CHAPTER_SCORE: {
+    status: 400,
+    message: `Skor Chapter 1 harus berupa bilangan bulat antara 0 dan ${CHAPTER_1_TOTAL_SCORE}.`,
+  },
+
+  CHAPTER_NOT_PASSED: {
+    status: 422,
+    message: `Chapter 1 belum lulus. Skor minimal adalah ${CHAPTER_1_MINIMUM_SCORE} dari ${CHAPTER_1_TOTAL_SCORE}.`,
+  },
+
+  PREVIOUS_CHAPTER_NOT_COMPLETED: {
+    status: 403,
+    message: "Selesaikan chapter sebelumnya terlebih dahulu.",
+  },
+};
 
 export async function setupChild(req: Request, res: Response) {
   try {
@@ -238,17 +269,12 @@ export async function completeChapter(req: Request, res: Response) {
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
 
-    if (code === "INVALID_CHAPTER_NUMBER") {
-      return res.status(400).json({
-        success: false,
-        message: "Nomor chapter tidak valid.",
-      });
-    }
+    const knownError = COMPLETE_CHAPTER_ERRORS[code];
 
-    if (code === "PREVIOUS_CHAPTER_NOT_COMPLETED") {
-      return res.status(403).json({
+    if (knownError) {
+      return res.status(knownError.status).json({
         success: false,
-        message: "Selesaikan chapter sebelumnya terlebih dahulu.",
+        message: knownError.message,
       });
     }
 

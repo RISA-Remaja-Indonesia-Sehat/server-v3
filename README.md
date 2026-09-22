@@ -1,81 +1,20 @@
-# 🌻 RISA API — Remaja Indonesia Sehat
+## API Documentation
 
-Backend API for **RISA (Remaja Indonesia Sehat)**, an interactive reproductive health education platform for Indonesian teenagers.
+Dokumentasi endpoint RISA tersedia melalui Postman:
 
-This server manages authentication-related backend functionality, guardian and child relationships, parental consent, child profiles, and learning progress.
+([View RISA API Dcumentation](https://documenter.getpostman.com/view/58428062/2sBYB2qSzx))
 
-## ✨ Main Responsibilities
+Dokumentasi tersebut mencakup:
 
-The RISA API currently handles:
+- daftar endpoint;
+- metode dan URL request;
+- kebutuhan autentikasi;
+- request body dan parameter;
+- contoh response berhasil;
+- kemungkinan response error;
+- contoh penggunaan melalui Postman dan beberapa bahasa pemrograman.
 
-* Guardian authentication verification
-* Guardian and child relationships
-* Parental consent requests
-* Child profile creation
-* Child login and logout
-* Child session verification
-* Chapter progress
-* Post-test progress
-* API health checks
-* Login rate limiting
-
-## 🛠️ Tech Stack
-
-The backend is built with:
-
-* Node.js
-* Express
-* TypeScript
-* Prisma ORM
-* PostgreSQL
-* Supabase
-* bcryptjs
-* cookie-parser
-* CORS
-* express-rate-limit
-* jose
-
-## 📁 Project Structure
-
-```text
-config/
-controllers/
-lib/
-middleware/
-prisma/
-routes/
-services/
-
-app.ts
-server.ts
-prisma7.config.ts
-```
-
-### Main directories
-
-* `config/` — Prisma, Supabase, and application configuration
-* `controllers/` — request and response handlers
-* `middleware/` — authentication and authorization middleware
-* `prisma/` — database schema
-* `routes/` — Express API routes
-* `services/` — application and business logic
-* `lib/` — shared backend utilities
-
-## 🗄️ Database
-
-RISA uses PostgreSQL with Prisma ORM.
-
-The current database includes models for:
-
-* Guardians
-* Child profiles
-* Guardian-child relationships
-* Parental consent
-* Consent requests
-* Chapter progress
-* Post-test progress
-
-## 🔐 Authentication
+## Authentication
 
 Guardian authentication uses Supabase authentication.
 
@@ -83,7 +22,7 @@ Authenticated requests from guardians are verified using a Bearer token.
 
 RISA also maintains a separate child authentication flow for child profiles.
 
-## 👨‍👩‍👧 Parental Consent
+## Parental Consent
 
 RISA includes a parental consent workflow for creating child profiles.
 
@@ -99,7 +38,7 @@ EXPIRED
 
 This allows the backend to distinguish between a newly created consent request, an approved request, and a request that has already been used.
 
-## 🛡️ Security
+## Security
 
 The backend includes several security-related features:
 
@@ -113,7 +52,7 @@ The backend includes several security-related features:
 
 Child login attempts are rate-limited to reduce repeated authentication attempts.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the repository
 
@@ -199,28 +138,6 @@ npm run prisma:migrate
 
 Runs Prisma development migrations.
 
-## 🔌 API
-
-Current API groups include:
-
-```text
-/api/health
-/api/me
-/api/consent
-/api/child
-```
-
-Child-related endpoints currently include:
-
-```text
-POST /api/child/setup
-POST /api/child/login
-GET  /api/child/me
-POST /api/child/logout
-```
-
-Some endpoints require guardian or child authentication.
-
 ## 🌐 Frontend Repository
 
 The RISA frontend is maintained separately:
@@ -234,6 +151,8 @@ The following values must remain private:
 ```text
 DATABASE_URL
 SUPABASE_SECRET_KEY
+CHILD_SESSION_SECRET
+GEMINI_API_KEY
 ```
 
 Never expose server-side secret keys through frontend environment variables or commit them to GitHub.
