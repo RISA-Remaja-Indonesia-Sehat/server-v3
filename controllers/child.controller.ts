@@ -83,10 +83,10 @@ export async function setupChild(req: Request, res: Response) {
       });
     }
 
-    if (code === "CONSENT_NOT_VALID") {
-      return res.status(403).json({
+    if (code === "CONSENT_ALREADY_USED") {
+      return res.status(409).json({
         success: false,
-        message: "Persetujuan tidak valid atau sudah kedaluwarsa.",
+        message: "Persetujuan ini sudah pernah digunakan.",
       });
     }
 

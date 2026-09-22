@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../config/prisma.js";
 
+import { assertConsentRequestUsable } from "./consent.service.js";
+
 const CHAPTER_1_TOTAL_SCORE = 6;
 const CHAPTER_1_MINIMUM_SCORE = 4;
 
@@ -58,19 +60,22 @@ export async function setupChildProfile({
      * - APPROVED
      * - belum expired
      */
-    const consentRequest = await tx.consentRequest.findFirst({
+    const consentRequest = await tx.consentRequest.findUnique({
       where: {
         id: consentRequestId,
+      },
 
-        guardianId,
-
-        status: "APPROVED",
-
-        expiresAt: {
-          gt: new Date(),
-        },
+      select: {
+        id: true,
+        guardianId: true,
+        policyVersion: true,
+        status: true,
+        approvedAt: true,
+        expiresAt: true,
       },
     });
+
+    assertConsentRequestUsable(consentRequest, guardianId);
 
     if (!consentRequest) {
       throw new Error("CONSENT_NOT_VALID");
