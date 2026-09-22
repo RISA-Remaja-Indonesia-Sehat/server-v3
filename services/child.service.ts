@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../config/prisma.js";
 
+const CHAPTER_1_TOTAL_SCORE = 6;
+const CHAPTER_1_MINIMUM_SCORE = 4;
+
 type SetupChildParams = {
   guardianId: string;
   consentRequestId: string;
@@ -238,9 +241,6 @@ export async function completeChapterProgress({
   ) {
     throw new Error("INVALID_CHAPTER_NUMBER");
   }
-  
-  const CHAPTER_1_TOTAL_SCORE = 6;
-  const CHAPTER_1_MINIMUM_SCORE = 4;
 
   if (chapterNumber === 1) {
     const isValidScore =
