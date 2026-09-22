@@ -168,47 +168,43 @@ export async function authenticateChild(username: string, pin: string) {
   };
 }
 
-export async function getChildHomeData(
-  childId: string,
-) {
-  const child =
-    await prisma.childProfile.findUnique({
-      where: {
-        id: childId,
-      },
+export async function getChildHomeData(childId: string) {
+  const child = await prisma.childProfile.findUnique({
+    where: {
+      id: childId,
+    },
 
-      select: {
-        id: true,
-        username: true,
-        avatarId: true,
+    select: {
+      id: true,
+      username: true,
+      avatarId: true,
 
-        chapters: {
-          where: {
-            completedAt: {
-              not: null,
-            },
-          },
-          select: {
-            chapterNumber: true,
+      chapters: {
+        where: {
+          completedAt: {
+            not: null,
           },
         },
-
-        postTest: {
-          select: {
-            completedAt: true,
-          },
+        select: {
+          chapterNumber: true,
         },
       },
-    });
+
+      postTest: {
+        select: {
+          completedAt: true,
+        },
+      },
+    },
+  });
 
   if (!child) {
     return null;
   }
 
-  const completedChapters =
-    child.chapters
-      .map((chapter: { chapterNumber: number }) => chapter.chapterNumber)
-      .sort((a: number, b: number) => a - b);
+  const completedChapters = child.chapters
+    .map((chapter: { chapterNumber: number }) => chapter.chapterNumber)
+    .sort((a: number, b: number) => a - b);
 
   return {
     child: {
@@ -220,8 +216,7 @@ export async function getChildHomeData(
     completedChapters,
 
     postTestCompleted:
-      child.postTest?.completedAt !== null &&
-      child.postTest !== null,
+      child.postTest?.completedAt !== null && child.postTest !== null,
   };
 }
 
@@ -241,88 +236,90 @@ export async function completeChapterProgress({
     chapterNumber < 1 ||
     chapterNumber > 7
   ) {
-    throw new Error(
-      "INVALID_CHAPTER_NUMBER"
-    );
+    throw new Error("INVALID_CHAPTER_NUMBER");
+  }
+  
+  const CHAPTER_1_TOTAL_SCORE = 6;
+  const CHAPTER_1_MINIMUM_SCORE = 4;
+
+  if (chapterNumber === 1) {
+    const isValidScore =
+      score !== undefined &&
+      Number.isInteger(score) &&
+      score >= 0 &&
+      score <= CHAPTER_1_TOTAL_SCORE;
+
+    if (!isValidScore) {
+      throw new Error("INVALID_CHAPTER_SCORE");
+    }
+
+    if (score < CHAPTER_1_MINIMUM_SCORE) {
+      throw new Error("CHAPTER_NOT_PASSED");
+    }
   }
 
-  return prisma.$transaction(
-    async (tx: Prisma.TransactionClient) => {
-      /*
-       * Chapter 2-7 hanya boleh diselesaikan
-       * kalau chapter sebelumnya sudah selesai.
-       */
-      if (chapterNumber > 1) {
-        const previousChapter =
-          await tx.chapterProgress.findUnique({
-            where: {
-              childId_chapterNumber: {
-                childId,
-                chapterNumber:
-                  chapterNumber - 1,
-              },
-            },
-
-            select: {
-              completedAt: true,
-            },
-          });
-
-        if (
-          !previousChapter?.completedAt
-        ) {
-          throw new Error(
-            "PREVIOUS_CHAPTER_NOT_COMPLETED"
-          );
-        }
-      }
-
-      const existing =
-        await tx.chapterProgress.findUnique({
-          where: {
-            childId_chapterNumber: {
-              childId,
-              chapterNumber,
-            },
-          },
-        });
-
-      const completedAt =
-        existing?.completedAt ??
-        new Date();
-
-      return tx.chapterProgress.upsert({
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    /*
+     * Chapter 2-7 hanya boleh diselesaikan
+     * kalau chapter sebelumnya sudah selesai.
+     */
+    if (chapterNumber > 1) {
+      const previousChapter = await tx.chapterProgress.findUnique({
         where: {
           childId_chapterNumber: {
             childId,
-            chapterNumber,
+            chapterNumber: chapterNumber - 1,
           },
         },
 
-        create: {
-          childId,
-          chapterNumber,
-          completedAt,
-
-          ...(score !== undefined
-            ? { score }
-            : {}),
-        },
-
-        update: {
-          completedAt,
-
-          ...(score !== undefined
-            ? { score }
-            : {}),
-        },
-
         select: {
-          chapterNumber: true,
-          score: true,
           completedAt: true,
         },
       });
+
+      if (!previousChapter?.completedAt) {
+        throw new Error("PREVIOUS_CHAPTER_NOT_COMPLETED");
+      }
     }
-  );
+
+    const existing = await tx.chapterProgress.findUnique({
+      where: {
+        childId_chapterNumber: {
+          childId,
+          chapterNumber,
+        },
+      },
+    });
+
+    const completedAt = existing?.completedAt ?? new Date();
+
+    return tx.chapterProgress.upsert({
+      where: {
+        childId_chapterNumber: {
+          childId,
+          chapterNumber,
+        },
+      },
+
+      create: {
+        childId,
+        chapterNumber,
+        completedAt,
+
+        ...(score !== undefined ? { score } : {}),
+      },
+
+      update: {
+        completedAt,
+
+        ...(score !== undefined ? { score } : {}),
+      },
+
+      select: {
+        chapterNumber: true,
+        score: true,
+        completedAt: true,
+      },
+    });
+  });
 }
